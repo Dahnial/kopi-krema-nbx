@@ -1,0 +1,12 @@
+# Backend Apps Script (Dipasang di Google Apps Script editor, bukan di GitHub Pages)
+Kode.gs
+Stylesheet.html
+JavaScript.html
+PANDUAN-SETUP.md
+
+# Skill & Development Docs
+*.md
+!README.md
+!PANDUAN-INSTALASI.md
+stitch_desain_ui_responsif_modern/
+.DS_Store

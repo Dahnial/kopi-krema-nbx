@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kopi Krema NBX — Specialty Coffee Nabire Papua Tengah</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Chart.js CDN (gas-webapp standard for interactive analytics) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- External Stylesheet for GitHub Pages Deployment -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- GLOBAL PROGRESS BAR / LOADING INDICATOR -->
+  <div id="global-loading-bar" class="global-loading-bar"></div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- =========================================================================
+       1. APP HEADER
+       ========================================================================= -->
+  <header class="app-header">
+    <div class="nav-container">
+      <div class="brand-logo" onclick="switchView('public')">
+        <div class="brand-icon">
+          <i class="fa-solid fa-mug-hot"></i>
+        </div>
+        <div class="brand-title-box">
+          <h1>Kopi Krema NBX</h1>
+          <span>Nabire • Papua Tengah</span>
+        </div>
+      </div>
+
+      <div class="nav-right-actions">
+        <!-- Status Operasional Kafe -->
+        <div id="header-store-badge" class="store-status-badge open">
+          <span class="pulse-dot"></span>
+          <span id="store-status-text">Buka (10:00 - 22:00 WIT)</span>
+        </div>
+
+        <!-- Dark Mode Toggle -->
+        <button class="btn-icon-only" onclick="toggleDarkMode()" title="Toggle Dark Mode">
+          <i id="dark-mode-icon" class="fa-solid fa-moon"></i>
+        </button>
+
+        <!-- Login / Dashboard Button -->
+        <button id="btn-header-auth" class="btn btn-secondary" onclick="handleAuthButtonClick()">
+          <i class="fa-solid fa-user-shield"></i>
+          <span id="header-auth-text">Masuk Kasir</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       2. SPA VIEW: HALAMAN PUBLIK (PELANGGAN)
+       ========================================================================= -->
+  <div id="view-public" class="spa-view active">
+    <main class="main-wrapper">
+      
+      <!-- HERO BANNER CAROUSEL -->
+      <section class="hero-slider-section">
+        <div id="slider-container" class="slider-container">
+          <!-- Slide Items akan di-render dinamis oleh JS -->
+        </div>
+        <div id="slider-dots" class="slider-dots"></div>
+      </section>
+
+      <!-- QUICK ACTION HERO CTA -->
+      <div class="quick-hero-cta">
+        <div class="cta-card" onclick="openReservationModal()">
+          <div class="cta-icon-box">
+            <i class="fa-solid fa-chair"></i>
+          </div>
+          <div class="cta-text">
+            <h3>Reservasi Meja</h3>
+            <p id="table-status-cta">Status: Meja Tersedia</p>
+          </div>
+        </div>
+
+        <div class="cta-card" onclick="openInfoModal()">
+          <div class="cta-icon-box">
+            <i class="fa-solid fa-location-dot"></i>
+          </div>
+          <div class="cta-text">
+            <h3>Lokasi & Jam Buka</h3>
+            <p>Nabire, Papua Tengah (10:00 - 22:00 WIT)</p>
+          </div>
+        </div>
+
+        <div class="cta-card" onclick="window.open('https://wa.me/6282121210694', '_blank')">
+          <div class="cta-icon-box" style="background:#E8F5E9; color:#2E7D32;">
+            <i class="fa-brands fa-whatsapp"></i>
+          </div>
+          <div class="cta-text">
+            <h3>Chat WhatsApp CRM</h3>
+            <p>082121210694 (Layanan Ramah)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- STORE CLOSED NOTICE (Jika Toko Offline) -->
+      <div id="offline-alert-box" style="display:none; background:var(--status-closed-bg); border:1px solid rgba(198,40,40,0.2); border-radius:var(--radius-lg); padding:1rem 1.25rem; margin-bottom:1.5rem; color:var(--status-closed);">
+        <div style="display:flex; align-items:center; gap:0.75rem; font-weight:700;">
+          <i class="fa-solid fa-clock-rotate-left fa-lg"></i>
+          <span>Mohon maaf, Kopi Krema NBX sedang OFFLINE / Tutup.</span>
+        </div>
+        <p style="font-size:0.85rem; margin-top:0.35rem; color:var(--text-secondary);">
+          Pemesanan online sedang dinonaktifkan sementara. Kami melayani kembali pada jam operasional 10.00 – 22.00 WIT.
+        </p>
+      </div>
+
+      <!-- SEARCH & FILTER SECTION -->
+      <div class="section-header">
+        <h2 class="section-title">Katalog Menu & Minuman</h2>
+        <span style="font-size:0.85rem; color:var(--text-secondary); font-weight:600;" id="menu-count-badge">8 Menu Pilihan</span>
+      </div>
+
+      <div class="search-filter-box">
+        <div class="search-input-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="input-search-menu" placeholder="Cari kopi, makanan, minuman favoritmu..." oninput="handleSearchMenu()">
+        </div>
+      </div>
+
+      <!-- CATEGORY PILLS BAR -->
+      <div id="category-pills-bar" class="category-nav-bar">
+        <div class="category-pill active" data-category="ALL" onclick="filterCategory('ALL')">
+          <i class="fa-solid fa-border-all"></i> Semua Menu
+        </div>
+        <div class="category-pill" data-category="Kopi" onclick="filterCategory('Kopi')">
+          <i class="fa-solid fa-mug-saucer"></i> Kopi Spesial
+        </div>
+        <div class="category-pill" data-category="Non-Kopi" onclick="filterCategory('Non-Kopi')">
+          <i class="fa-solid fa-glass-water"></i> Non-Kopi & Latte
+        </div>
+        <div class="category-pill" data-category="Makanan" onclick="filterCategory('Makanan')">
+          <i class="fa-solid fa-utensils"></i> Makanan Berat
+        </div>
+        <div class="category-pill" data-category="Snack" onclick="filterCategory('Snack')">
+          <i class="fa-solid fa-cookie-bite"></i> Snack & Pastry
+        </div>
+      </div>
+
+      <!-- PRODUCT CARDS GRID -->
+      <div id="product-catalog-grid" class="product-grid">
+        <!-- Render dinamis via JS -->
+      </div>
+
+    </main>
+
+    <!-- FLOATING CART BAR (MOBILE & DESKTOP) -->
+    <div id="floating-cart-bar" class="floating-cart-bar" onclick="openCartModal()">
+      <div class="cart-bar-left">
+        <div class="cart-count-badge" id="cart-badge-count">0</div>
+        <div>
+          <div style="font-size:0.75rem; color:var(--crema-soft); font-weight:600;">Keranjang Pesanan</div>
+          <div class="cart-bar-total" id="cart-bar-total">Rp 0</div>
+        </div>
+      </div>
+      <button class="btn btn-gold" style="padding:0.5rem 1rem; font-size:0.85rem;">
+        Lihat Pesanan <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. SPA VIEW: DASHBOARD MANAJEMEN ADMIN & KASIR
+       ========================================================================= -->
+  <div id="view-dashboard" class="spa-view">
+    <div class="admin-header">
+      <div class="admin-title-row">
+        <button class="btn-icon-only" style="background:rgba(255,255,255,0.15); color:#fff; border:none;" onclick="switchView('public')" title="Kembali ke Halaman Depan">
+          <i class="fa-solid fa-house"></i>
+        </button>
+        <div>
+          <h2 style="font-size:1.15rem; font-weight:800; margin:0;" id="dashboard-user-greeting">Dashboard Pengelola</h2>
+          <span style="font-size:0.75rem; color:var(--crema-gold); font-weight:600;" id="dashboard-role-badge">Role: OWNER</span>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:0.75rem;">
+        <button class="btn btn-secondary" style="padding:0.45rem 0.85rem; font-size:0.75rem;" onclick="refreshDashboardData()">
+          <i class="fa-solid fa-arrows-rotate"></i> Refresh
+        </button>
+        <button class="btn btn-secondary" style="padding:0.45rem 0.85rem; font-size:0.75rem; background:#FFEBEE; color:#C62828; border-color:#FFCDD2;" onclick="logoutAdmin()">
+          <i class="fa-solid fa-right-from-bracket"></i> Keluar
+        </button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD TABS NAVIGATION -->
+    <div class="admin-tabs-nav">
+      <button class="admin-tab-btn active" data-tab="orders" onclick="switchAdminTab('orders')">
+        <i class="fa-solid fa-receipt"></i> Pesanan Masuk
+      </button>
+      <button class="admin-tab-btn" data-tab="reservations" onclick="switchAdminTab('reservations')">
+        <i class="fa-solid fa-calendar-check"></i> Reservasi Meja
+      </button>
+      <button class="admin-tab-btn" data-tab="products" onclick="switchAdminTab('products')">
+        <i class="fa-solid fa-boxes-stacked"></i> Modul Produk & Menu
+      </button>
+      <button class="admin-tab-btn tab-owner-only" data-tab="reports" onclick="switchAdminTab('reports')">
+        <i class="fa-solid fa-chart-line"></i> Laporan Keuangan & AI Insight
+      </button>
+      <button class="admin-tab-btn tab-owner-only" data-tab="settings" onclick="switchAdminTab('settings')">
+        <i class="fa-solid fa-sliders"></i> Pengaturan Toko
+      </button>
+    </div>
+
+    <div class="main-wrapper" style="padding-top:1.5rem;">
+      
+      <!-- TAB 1: PESANAN MASUK -->
+      <div id="pane-orders" class="admin-content-pane active">
+        <div class="section-header">
+          <h2 class="section-title">Kelola Pesanan Pelanggan</h2>
+          <div style="display:flex; gap:0.5rem;">
+            <select id="filter-order-status" class="form-control" style="width:160px; padding:0.45rem 0.75rem;" onchange="renderAdminOrders()">
+              <option value="ALL">Semua Status</option>
+              <option value="PENDING">Pending</option>
+              <option value="DIPROSES">Diproses</option>
+              <option value="SELESAI">Selesai</option>
+              <option value="BATAL">Batal</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>No. Order & Waktu</th>
+                <th>Pelanggan</th>
+                <th>Tipe & Alamat</th>
+                <th>Item Pesanan</th>
+                <th>Total & Bayar</th>
+                <th>Bukti Transfer</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="table-body-orders">
+              <!-- Render via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 2: RESERVASI MEJA -->
+      <div id="pane-reservations" class="admin-content-pane">
+        <div class="section-header">
+          <h2 class="section-title">Daftar Reservasi Meja</h2>
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <span style="font-size:0.85rem; font-weight:700;">Status Meja Kafe:</span>
+            <button id="btn-toggle-table-global" class="btn btn-secondary" onclick="toggleTableAvailability()">
+              <i class="fa-solid fa-chair"></i> <span id="table-global-status-text">Meja: READY</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID Reservasi</th>
+                <th>Tamu & No WA</th>
+                <th>Tanggal & Jam</th>
+                <th>Pax</th>
+                <th>Meja & Catatan</th>
+                <th>Status</th>
+                <th>Aksi Cepat</th>
+              </tr>
+            </thead>
+            <tbody id="table-body-reservations">
+              <!-- Render via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 3: MODUL MANAJEMEN PRODUK & MENU (CRUD LENGKAP) -->
+      <div id="pane-products" class="admin-content-pane">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">Manajemen Produk & Menu Kafe</h2>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.25rem;">
+              Atur daftar menu, ganti harga, upload foto ke Google Drive, dan ubah status stok (Ready vs Sold Out).
+            </p>
+          </div>
+          <button class="btn btn-primary" onclick="openProductModal()">
+            <i class="fa-solid fa-plus"></i> Tambah Menu Baru
+          </button>
+        </div>
+
+        <!-- Filter Bar Produk -->
+        <div class="search-filter-box" style="margin-bottom:1rem;">
+          <div class="search-input-wrapper">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="admin-search-menu" placeholder="Cari nama menu atau ID..." oninput="renderAdminProducts()">
+          </div>
+          <select id="admin-filter-category" class="form-control" style="max-width:180px;" onchange="renderAdminProducts()">
+            <option value="ALL">Semua Kategori</option>
+            <option value="Kopi">Kopi</option>
+            <option value="Non-Kopi">Non-Kopi</option>
+            <option value="Makanan">Makanan</option>
+            <option value="Snack">Snack</option>
+          </select>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th>Nama Menu & ID</th>
+                <th>Kategori</th>
+                <th>Harga (Rp)</th>
+                <th>Best Seller</th>
+                <th>Stok (Ready/Sold Out)</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="table-body-products">
+              <!-- Render via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 4: LAPORAN KEUANGAN & AI INSIGHT (OWNER ONLY) -->
+      <div id="pane-reports" class="admin-content-pane">
+        <div class="section-header">
+          <h2 class="section-title">Ringkasan Omset & Analitik AI</h2>
+        </div>
+
+        <!-- Metric KPI Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-title">Total Pendapatan (Selesai)</div>
+            <div class="metric-value" id="metric-total-omset" style="color:var(--status-open);">Rp 0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Pesanan Selesai</div>
+            <div class="metric-value" id="metric-pesanan-selesai">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Pesanan Pending / Baru</div>
+            <div class="metric-value" id="metric-pesanan-pending" style="color:var(--warning);">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Reservasi Pending</div>
+            <div class="metric-value" id="metric-reservasi-pending" style="color:var(--crema-gold);">0</div>
+          </div>
+        </div>
+
+        <!-- AI-Style Insight Panel (gas-webapp standard) -->
+        <div class="ai-insight-panel" style="background:linear-gradient(135deg, rgba(43,27,23,0.06), rgba(212,163,115,0.12)); border:1px solid var(--crema-soft); border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:1.5rem;">
+          <div style="display:flex; align-items:center; gap:0.6rem; font-weight:800; font-size:1rem; color:var(--espresso-rich); margin-bottom:0.6rem;">
+            <i class="fa-solid fa-brain" style="color:var(--crema-gold);"></i>
+            <span>AI Business & Sales Insights</span>
+          </div>
+          <div id="ai-insights-content" style="font-size:0.875rem; line-height:1.6; color:var(--text-primary);">
+            <!-- Render via JS -->
+          </div>
+        </div>
+
+        <!-- Chart.js Graph Analytics -->
+        <div style="background:var(--surface-card); border:1px solid var(--border-light); border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:1.5rem;">
+          <h3 style="font-size:1.05rem; font-weight:800; margin-bottom:1rem;">Distribusi Pendapatan per Kategori Menu</h3>
+          <div style="max-height:300px; position:relative;">
+            <canvas id="chart-category-sales"></canvas>
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-top:1.5rem;">
+          <h3 style="font-size:1.15rem; font-weight:800;">5 Menu Paling Laris (Best Seller Leaderboard)</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Peringkat</th>
+                <th>Nama Menu</th>
+                <th>Jumlah Terjual (Porsi/Cup)</th>
+              </tr>
+            </thead>
+            <tbody id="table-body-bestsellers">
+              <!-- Render via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 5: PENGATURAN TOKO (OWNER ONLY) -->
+      <div id="pane-settings" class="admin-content-pane">
+        <div class="section-header">
+          <h2 class="section-title">Kontrol Operasional & Toko</h2>
+        </div>
+
+        <div style="background:var(--surface-card); border:1px solid var(--border-light); border-radius:var(--radius-lg); padding:1.5rem; max-width:650px;">
+          <div class="form-group">
+            <label>Saklar Status Operasional Toko (Online vs Offline)</label>
+            <div style="display:flex; align-items:center; gap:1rem; margin-top:0.5rem;">
+              <button id="btn-toggle-store-open" class="btn btn-primary" onclick="toggleStoreOnlineOffline('OPEN')">
+                <i class="fa-solid fa-door-open"></i> BUKA TOKO (ONLINE)
+              </button>
+              <button id="btn-toggle-store-closed" class="btn btn-secondary" style="background:#FFEBEE; color:#C62828; border-color:#FFCDD2;" onclick="toggleStoreOnlineOffline('CLOSED')">
+                <i class="fa-solid fa-door-closed"></i> TUTUP TOKO (OFFLINE)
+              </button>
+            </div>
+            <small style="color:var(--text-muted); display:block; margin-top:0.4rem;">
+              Jika berstatus TUTUP / OFFLINE, pelanggan di halaman publik tidak dapat menekan tombol order.
+            </small>
+          </div>
+
+          <hr style="border:none; border-top:1px solid var(--border-light); margin:1.25rem 0;">
+
+          <div class="form-group">
+            <label>Hotline WhatsApp Kafe</label>
+            <input type="text" id="setting-wa-hotline" class="form-control" value="082121210694" readonly>
+            <small style="color:var(--text-muted);">Nomor tujuan penerima pesanan & CRM otomatis.</small>
+          </div>
+
+          <div class="form-group">
+            <label>Jam Operasional</label>
+            <input type="text" id="setting-hours" class="form-control" value="10.00 – 22.00 WIT" readonly>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       4. MODALS DIALOG
+       ========================================================================= -->
+
+  <!-- MODAL: KERANJANG BELANJA & CHECKOUT -->
+  <div id="modal-cart" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-cart-shopping" style="color:var(--crema-gold);"></i> Keranjang Pesanan</h2>
+        <button class="modal-close-btn" onclick="closeCartModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="cart-items-list" style="margin-bottom:1.25rem;">
+          <!-- Item render via JS -->
+        </div>
+
+        <div style="background:var(--canvas-cream); border-radius:var(--radius-md); padding:1rem; margin-bottom:1.25rem;">
+          <div style="display:flex; justify-content:space-between; font-weight:800; font-size:1.1rem;">
+            <span>Total Tagihan</span>
+            <span id="checkout-total-price" style="color:var(--espresso-rich);">Rp 0</span>
+          </div>
+        </div>
+
+        <form id="form-checkout" onsubmit="handleCheckoutSubmit(event)">
+          <h3 style="font-size:0.95rem; font-weight:800; margin-bottom:0.75rem;">Informasi Pemesan</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nama Lengkap *</label>
+              <input type="text" id="order-cust-name" class="form-control" required placeholder="Contoh: Bpk. Rudi">
+            </div>
+            <div class="form-group">
+              <label>Nomor WhatsApp *</label>
+              <input type="tel" id="order-cust-phone" class="form-control" required placeholder="0821xxxxxxx">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Tipe Layanan *</label>
+            <select id="order-type" class="form-control" onchange="handleOrderTypeChange()">
+              <option value="DINE_IN">Makan / Minum di Tempat (Dine In)</option>
+              <option value="TAKE_AWAY">Bungkus / Bawa Pulang (Take Away)</option>
+              <option value="COD">Pesan Antar / COD (Nabire Area)</option>
+            </select>
+          </div>
+
+          <div id="group-delivery-address" class="form-group" style="display:none;">
+            <label>Alamat Pengantaran / Lokasi Antar *</label>
+            <textarea id="order-delivery-address" class="form-control" rows="2" placeholder="Sebutkan jalan, nomor rumah, atau patokan di Nabire..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Metode Pembayaran *</label>
+            <select id="order-payment-method" class="form-control" onchange="handlePaymentMethodChange()">
+              <option value="TUNAI">Bayar Tunai di Kasir</option>
+              <option value="COD">Bayar di Tempat (COD Saat Tiba)</option>
+              <option value="QRIS">QRIS / E-Wallet (BCA/Mandiri/GoPay/OVO)</option>
+              <option value="TRANSFER">Transfer Bank Langsung</option>
+            </select>
+          </div>
+
+          <!-- QRIS Container Preview -->
+          <div id="qris-display-box" style="display:none; background:#FFF; border:1px solid var(--border-light); border-radius:var(--radius-md); padding:1rem; text-align:center; margin-bottom:1rem;">
+            <div style="font-weight:700; font-size:0.85rem; margin-bottom:0.5rem; color:var(--text-primary);">
+              Silakan Scan QRIS Kopi Krema NBX:
+            </div>
+            <img id="qris-code-image" src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=00020101021126570011ID.CO.QRIS.WWW0118936009990000000000520458125802ID5914KOPI_KREMA_NBX6006NABIRE63041234" alt="QRIS Kopi Krema NBX" style="max-width:200px; height:auto; border-radius:var(--radius-sm); border:1px solid #ddd;">
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.5rem;">NMID: ID1020000000000 • Nabire</p>
+          </div>
+
+          <!-- Dropzone Bukti Transfer -->
+          <div id="group-upload-proof" class="form-group" style="display:none;">
+            <label>Unggah Foto Struk / Bukti Transfer (Opsional)</label>
+            <div class="dropzone-box" onclick="document.getElementById('file-proof').click()">
+              <i class="fa-solid fa-cloud-arrow-up fa-2x" style="color:var(--crema-gold);"></i>
+              <p style="font-size:0.85rem; font-weight:600; margin-top:0.35rem;">Klik untuk pilih foto struk bayar</p>
+              <input type="file" id="file-proof" accept="image/*" style="display:none;" onchange="handleProofImageSelected(event)">
+            </div>
+            <div id="proof-preview-box" class="image-preview-box">
+              <img id="proof-preview-img" src="" alt="Preview Bukti">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Catatan Tambahan (Opsional)</label>
+            <input type="text" id="order-notes" class="form-control" placeholder="Contoh: Gula sedikit, tanpa es, dll.">
+          </div>
+
+          <div class="modal-footer" style="padding:0; padding-top:1rem; border:none;">
+            <button type="button" class="btn btn-secondary" onclick="closeCartModal()">Batal</button>
+            <button type="submit" id="btn-submit-order" class="btn btn-primary" style="flex:1;">
+              <i class="fa-brands fa-whatsapp"></i> Konfirmasi & Kirim Pesanan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RESERVASI MEJA -->
+  <div id="modal-reservation" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-chair" style="color:var(--crema-gold);"></i> Reservasi Meja Kafe</h2>
+        <button class="modal-close-btn" onclick="closeReservationModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-reservation" onsubmit="handleReservationSubmit(event)">
+          <div class="form-group">
+            <label>Nama Lengkap / Atas Nama *</label>
+            <input type="text" id="res-name" class="form-control" required placeholder="Nama Anda atau Instansi">
+          </div>
+
+          <div class="form-group">
+            <label>Nomor WhatsApp Aktif *</label>
+            <input type="tel" id="res-phone" class="form-control" required placeholder="0821xxxxxxx">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tanggal *</label>
+              <input type="date" id="res-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Jam Kedatangan (WIT) *</label>
+              <input type="time" id="res-time" class="form-control" required min="10:00" max="22:00">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Jumlah Tamu (Orang) *</label>
+              <input type="number" id="res-pax" class="form-control" required min="1" max="50" value="2">
+            </div>
+            <div class="form-group">
+              <label>Pilihan Area Meja</label>
+              <select id="res-table-pref" class="form-control">
+                <option value="Area Indoor AC">Area Indoor AC (Non-Smoking)</option>
+                <option value="Area Outdoor Estetik">Area Outdoor Estetik (Smoking)</option>
+                <option value="Meja VIP / Meeting">Meja VIP / Meeting Room</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Catatan Khusus (Acara / Request Khusus)</label>
+            <textarea id="res-notes" class="form-control" rows="2" placeholder="Contoh: Acara ulang tahun, minta colokan listrik dekat meja..."></textarea>
+          </div>
+
+          <div class="modal-footer" style="padding:0; padding-top:1rem; border:none;">
+            <button type="button" class="btn btn-secondary" onclick="closeReservationModal()">Batal</button>
+            <button type="submit" id="btn-submit-res" class="btn btn-primary" style="flex:1;">
+              <i class="fa-solid fa-paper-plane"></i> Ajukan Reservasi
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: LOGIN PENGELOLA (ADMIN / KASIR) -->
+  <div id="modal-login" class="modal-backdrop">
+    <div class="modal-box" style="max-width:400px;">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-lock" style="color:var(--crema-gold);"></i> Masuk Pengelola</h2>
+        <button class="modal-close-btn" onclick="closeLoginModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-login" onsubmit="handleLoginSubmit(event)">
+          <div class="form-group">
+            <label>Username / ID Pengguna</label>
+            <input type="text" id="login-username" class="form-control" required placeholder="admin atau kasir">
+          </div>
+          <div class="form-group">
+            <label>Kata Sandi / PIN</label>
+            <input type="password" id="login-password" class="form-control" required placeholder="Masukkan password">
+          </div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:1rem;">
+            Default login: <strong>admin</strong> / <strong>krema123</strong> atau <strong>kasir</strong> / <strong>kasir123</strong>
+          </div>
+          <button type="submit" id="btn-login-submit" class="btn btn-primary" style="width:100%;">
+            Masuk ke Dashboard
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TAMBAH / EDIT PRODUK & MENU (CRUD LENGKAP) -->
+  <div id="modal-product" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="modal-product-title"><i class="fa-solid fa-mug-hot" style="color:var(--crema-gold);"></i> Tambah Menu Baru</h2>
+        <button class="modal-close-btn" onclick="closeProductModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-product" onsubmit="handleProductSubmit(event)">
+          <input type="hidden" id="prod-id">
+
+          <div class="form-group">
+            <label>Nama Menu *</label>
+            <input type="text" id="prod-name" class="form-control" required placeholder="Contoh: Kopi Susu Krema Gula Aren">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Kategori *</label>
+              <select id="prod-category" class="form-control" required>
+                <option value="Kopi">Kopi</option>
+                <option value="Non-Kopi">Non-Kopi</option>
+                <option value="Makanan">Makanan</option>
+                <option value="Snack">Snack</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Harga Jual (Rp) *</label>
+              <input type="number" id="prod-price" class="form-control" required min="1000" step="500" placeholder="22000">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Deskripsi Menu</label>
+            <textarea id="prod-desc" class="form-control" rows="2" placeholder="Jelaskan cita rasa, komposisi atau keunikan menu..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Foto Produk (Upload ke Google Drive)</label>
+            <div class="dropzone-box" onclick="document.getElementById('prod-file-image').click()">
+              <i class="fa-solid fa-camera fa-2x" style="color:var(--crema-gold);"></i>
+              <p style="font-size:0.85rem; font-weight:600; margin-top:0.35rem;">Pilih foto produk baru</p>
+              <input type="file" id="prod-file-image" accept="image/*" style="display:none;" onchange="handleProductImageSelected(event)">
+            </div>
+            <div id="prod-preview-box" class="image-preview-box">
+              <img id="prod-preview-img" src="" alt="Preview Produk">
+            </div>
+            <input type="hidden" id="prod-image-existing-url">
+          </div>
+
+          <div class="form-row" style="margin-top:0.75rem;">
+            <div class="form-group">
+              <label>Status Stok</label>
+              <select id="prod-stock" class="form-control">
+                <option value="READY">Ready (Tersedia)</option>
+                <option value="SOLD_OUT">Sold Out (Habis)</option>
+              </select>
+            </div>
+            <div class="form-group" style="display:flex; align-items:center; margin-top:1.5rem;">
+              <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                <input type="checkbox" id="prod-is-bestseller" style="width:18px; height:18px;">
+                <span>Tandai Sebagai Best Seller ★</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding:0; padding-top:1rem; border:none;">
+            <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Batal</button>
+            <button type="submit" id="btn-save-product" class="btn btn-primary" style="flex:1;">
+              <i class="fa-solid fa-floppy-disk"></i> Simpan Menu
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: INFO PROFIL KAFE & LOKASI -->
+  <div id="modal-info" class="modal-backdrop">
+    <div class="modal-box" style="max-width:460px;">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-store" style="color:var(--crema-gold);"></i> Kopi Krema NBX</h2>
+        <button class="modal-close-btn" onclick="closeInfoModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="font-size:0.9rem; line-height:1.6;">
+        <p><strong>Kopi Krema NBX</strong> adalah specialty coffee house yang menyajikan olahan biji kopi pilihan tanah Papua dan racikan minuman modern dengan suasana hangat dan bersahabat.</p>
+        <div style="margin-top:1rem; padding:0.75rem; background:var(--canvas-cream); border-radius:var(--radius-md);">
+          <div>📍 <strong>Alamat:</strong> Nabire, Papua Tengah</div>
+          <div>⏰ <strong>Jam Buka:</strong> 10.00 – 22.00 WIT (Setiap Hari)</div>
+          <div>📱 <strong>WhatsApp CRM:</strong> 082121210694</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: IMAGE / DOCUMENT PREVIEW (gas-webapp standard) -->
+  <div id="modal-preview" class="modal-backdrop">
+    <div class="modal-box" style="max-width:600px;">
+      <div class="modal-header">
+        <h2 id="modal-preview-title"><i class="fa-solid fa-image"></i> Pratinjau Berkas</h2>
+        <button class="modal-close-btn" onclick="closePreviewModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align:center;">
+        <img id="modal-preview-image" src="" alt="Pratinjau" style="max-width:100%; max-height:450px; border-radius:var(--radius-md); object-fit:contain; display:none;">
+        <iframe id="modal-preview-iframe" src="" style="width:100%; height:450px; border:none; display:none;"></iframe>
+      </div>
+      <div class="modal-footer">
+        <a id="btn-preview-download" href="#" target="_blank" class="btn btn-secondary"><i class="fa-solid fa-download"></i> Buka / Unduh</a>
+        <button type="button" class="btn btn-primary" onclick="closePreviewModal()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Frontend Scripts following strict file structure contract -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
